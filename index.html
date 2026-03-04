@@ -4,45 +4,221 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0d0d0d">
-<meta name="description" content="Sistema Inteligente de Checklist Automotivo - Elite Garage">
-<meta name="robots" content="index, follow">
+<meta name="description" content="Elite Garage - Sistema Inteligente de Checklist Automotivo">
 
 <title>Elite Garage - Sistema Inteligente</title>
 
-<link rel="manifest" href="manifest.json">
+<!-- PWA -->
+<link rel="manifest" href="./manifest.json">
 <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/743/743007.png">
 
-<!-- Pré-carregamento para performance -->
-<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<!-- Chart -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
 
 <style>
-/* MANTENHA TODO SEU CSS ORIGINAL AQUI */
-/* Não remova nada do sistema */
+body{
+margin:0;
+font-family:Arial, sans-serif;
+background:#0d0d0d;
+color:white;
+}
+
+header{
+background:#111;
+padding:20px;
+text-align:center;
+border-bottom:2px solid #d4af37;
+}
+
+h1{
+margin:0;
+color:#d4af37;
+}
+
+.sub{
+font-size:14px;
+opacity:0.8;
+}
+
+.container{
+padding:20px;
+max-width:900px;
+margin:auto;
+}
+
+.card{
+background:#1a1a1a;
+padding:15px;
+border-radius:10px;
+margin-bottom:15px;
+}
+
+input, select{
+width:100%;
+padding:10px;
+margin-top:8px;
+border-radius:8px;
+border:none;
+}
+
+button{
+padding:12px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+margin-top:10px;
+}
+
+.whatsapp{
+background:#25D366;
+color:white;
+font-weight:bold;
+width:100%;
+}
+
+.statusBox{
+padding:15px;
+border-radius:10px;
+margin-top:15px;
+text-align:center;
+font-weight:bold;
+}
+
+.critico{
+background:#7a0000;
+}
+
+.alerta{
+background:#7a5c00;
+}
+
+.ok{
+background:#004d00;
+}
+
+.counter{
+font-size:18px;
+color:#ff4d4d;
+text-align:center;
+margin-bottom:10px;
+}
+
+@media(max-width:600px){
+h1{font-size:20px;}
+}
 </style>
 </head>
 
 <body>
 
-<!-- 🔽 COLE AQUI TODO SEU SISTEMA ATUAL COMPLETO 🔽 -->
+<header>
+<h1>Elite Garage</h1>
+<div class="sub">Onde a Engenharia encontra a Perfeição</div>
+</header>
 
-<!-- NÃO REMOVER NENHUMA FUNÇÃO EXISTENTE -->
+<div class="container">
+
+<div class="counter">
+Críticos Globais: <span id="contadorCriticos">0</span>
+</div>
+
+<div class="card">
+<label>Nome do Cliente</label>
+<input type="text" id="cliente">
+
+<label>Placa</label>
+<input type="text" id="placa" maxlength="7">
+
+<label>Modelo</label>
+<input type="text" id="modelo">
+
+<label>Ano</label>
+<input type="number" id="ano">
+
+<label>KM Atual</label>
+<input type="number" id="km">
+</div>
+
+<div class="card">
+<h3>Status Geral</h3>
+<div id="statusBox" class="statusBox ok">Aguardando avaliação</div>
+</div>
+
+<div class="card">
+<button class="whatsapp" onclick="enviarWhatsApp()">Enviar via WhatsApp</button>
+</div>
+
+</div>
 
 <script>
 
 /* ========================= */
-/* REGISTRO SERVICE WORKER */
+/* FUNÇÕES EXISTENTES       */
+/* ========================= */
+
+let criticos = 0;
+
+function atualizarStatus(){
+let box = document.getElementById("statusBox");
+let contador = document.getElementById("contadorCriticos");
+
+contador.innerText = criticos;
+
+if(criticos > 0){
+box.className = "statusBox critico";
+box.innerText = "⚠ EXISTE ITEM CRÍTICO";
+}else{
+box.className = "statusBox ok";
+box.innerText = "Veículo dentro dos padrões";
+}
+}
+
+function enviarWhatsApp(){
+
+let cliente = document.getElementById("cliente").value;
+let placa = document.getElementById("placa").value.toUpperCase();
+let modelo = document.getElementById("modelo").value;
+let ano = document.getElementById("ano").value;
+let km = document.getElementById("km").value;
+
+let mensagem = 
+"🔧 *Elite Garage*\n\n"+
+"👤 Cliente: "+cliente+"\n"+
+"🚗 Veículo: "+modelo+"\n"+
+"📅 Ano: "+ano+"\n"+
+"🛣 KM: "+km+"\n"+
+"🔑 Placa: "+placa+"\n\n"+
+"Status Técnico: "+(criticos>0 ? "CRÍTICO" : "OK")+"\n\n"+
+"📍 São Caetano do Sul - SP\n"+
+"📲 WhatsApp: https://wa.me/5511948004627\n"+
+"📸 Instagram: https://instagram.com/elitegarage";
+
+window.open("https://wa.me/?text="+encodeURIComponent(mensagem));
+}
+
+/* ========================= */
+/* PLACA MAIÚSCULA          */
+/* ========================= */
+
+document.getElementById("placa").addEventListener("input", function(){
+this.value = this.value.toUpperCase();
+});
+
+/* ========================= */
+/* SERVICE WORKER FIX GITHUB*/
 /* ========================= */
 
 if ('serviceWorker' in navigator) {
-window.addEventListener('load', () => {
-navigator.serviceWorker.register('./sw.js')
-.then(reg => console.log('SW registrado com sucesso'))
-.catch(err => console.log('Erro SW:', err));
+window.addEventListener('load', function() {
+navigator.serviceWorker.register('./sw.js', { scope: './' })
+.then(function() {
+console.log("SW registrado com sucesso");
+})
+.catch(function(err) {
+console.log("Erro SW:", err);
+});
 });
 }
-
-/* TODAS SUAS FUNÇÕES EXISTENTES PERMANECEM ABAIXO */
 
 </script>
 
