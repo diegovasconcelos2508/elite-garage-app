@@ -13,6 +13,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
 
 <style>
+/* --- Mantém o estilo anterior --- */
 body{margin:0;font-family:Arial,sans-serif;background:#0d0d0d;color:white;}
 header{background:#111;padding:20px;text-align:center;border-bottom:2px solid #d4af37;}
 h1{margin:0;color:#d4af37;}
@@ -37,6 +38,15 @@ button:hover{opacity:0.9;}
 textarea.comment{margin-top:5px;height:40px;resize:none;}
 .dashboard{margin-top:20px;}
 canvas{background:#111;border-radius:10px;padding:10px;}
+.riskList{margin-top:15px;}
+.riskItem{padding:5px;margin-bottom:5px;border-radius:5px;}
+.riskBaixo{background:#004d00;}
+.riskMedio{background:#d4af00;}
+.riskAlto{background:#ff8000;}
+.riskCritico{background:#ff4d4d;}
+.alertInteligente{margin-top:10px;padding:10px;border-radius:8px;font-weight:bold;}
+.alertAmarelo{background:#d4af00;color:#111;}
+.alertVermelho{background:#ff4d4d;color:white;}
 @keyframes pulse{0%{transform:scale(1);}50%{transform:scale(1.05);}100%{transform:scale(1);}}
 @media(max-width:600px){h1{font-size:20px;}.check-item{flex-direction:column;align-items:flex-start;}.check-buttons button{width:100%;margin:2px 0 0 0;}}
 </style>
@@ -87,6 +97,7 @@ canvas{background:#111;border-radius:10px;padding:10px;}
     <div class="card">
         <h3>Status Geral</h3>
         <div id="statusBox" class="statusBox ok">Aguardando avaliação</div>
+        <div id="alertInteligente" class="alertInteligente"></div>
     </div>
 
     <!-- Painel Administrativo -->
@@ -94,6 +105,7 @@ canvas{background:#111;border-radius:10px;padding:10px;}
         <h3>Painel Administrativo</h3>
         <canvas id="paretoChart"></canvas>
         <canvas id="temposManutencaoChart"></canvas>
+        <div class="riskList" id="riskList"></div>
     </div>
 
     <!-- Envio WhatsApp -->
@@ -104,143 +116,101 @@ canvas{background:#111;border-radius:10px;padding:10px;}
 </div>
 
 <script>
-// ======================
-// Configurações iniciais
-// ======================
-let criticos=0;
-let categorias=["Sistema de Frenagem","Suspensão e Direção","Pneus e Rodas","Motor","Transmissão","Sistema Elétrico","Checkup Geral"];
-const checklistDiv=document.getElementById("checklist");
+window.addEventListener('DOMContentLoaded', () => {
+    const checklistDiv=document.getElementById("checklist");
+    let criticos=0;
+    const categorias=["Sistema de Frenagem","Suspensão e Direção","Pneus e Rodas","Motor","Transmissão","Sistema Elétrico","Checkup Geral"];
 
-// Gerar checklist com 3 itens por categoria
-categorias.forEach(cat=>{
-    const categoryDiv=document.createElement('div');
-    categoryDiv.className='category';
-    categoryDiv.id=cat.replace(/\s+/g,'').toLowerCase();
-
-    let innerHTML=`<h4>${cat}</h4>`;
-    for(let i=1;i<=3;i++){
-        innerHTML+=`
-        <div class="check-item" data-status="ok">
-            <span>${cat} - Item ${i}</span>
-            <div class="check-buttons">
-                <button onclick="setStatus(this,'ok')">OK</button>
-                <button onclick="setStatus(this,'alerta')">ALERTA</button>
-                <button onclick="setStatus(this,'critico')">CRÍTICO</button>
-                <input type="file" onchange="uploadPhoto(this)" style="display:none;" accept="image/*">
-                <button onclick="this.previousElementSibling.click()">📸</button>
-            </div>
-            <textarea class="comment" placeholder="Comentário"></textarea>
-        </div>`;
-    }
-    categoryDiv.innerHTML=innerHTML;
-    checklistDiv.appendChild(categoryDiv);
-});
-
-// ======================
-// Funções do Checklist
-// ======================
-function setStatus(btn,status){
-    const item=btn.closest('.check-item');
-    const category=btn.closest('.category');
-    item.dataset.status=status;
-    if(status==='critico'){category.classList.add('critico');} 
-    else{category.classList.remove('critico');}
-    atualizarStatus();
-}
-function atualizarStatus(){
-    const statusBox=document.getElementById("statusBox");
-    const contador=document.getElementById("contadorCriticos");
-    criticos=document.querySelectorAll('.check-item[data-status="critico"]').length;
-    contador.innerText=criticos;
-    if(criticos>0){statusBox.className="statusBox critico";statusBox.innerText="🔴 Risco Crítico";}
-    else{
-        const alertas=document.querySelectorAll('.check-item[data-status="alerta"]').length;
-        if(alertas>0){statusBox.className="statusBox alerta";statusBox.innerText="🟡 Atenção";}
-        else{statusBox.className="statusBox ok";statusBox.innerText="🟢 Aprovado";}
-    }
-    atualizarPainelAdmin();
-}
-
-// ======================
-// Upload de fotos
-// ======================
-function uploadPhoto(input){
-    const file=input.files[0];
-    if(file){
-        const reader=new FileReader();
-        reader.onload=function(e){console.log('Foto carregada:',e.target.result);}
-        reader.readAsDataURL(file);
-    }
-}
-
-// ======================
-// WhatsApp
-// ======================
-function enviarWhatsApp(){
-    const cliente=document.getElementById("cliente").value;
-    const placa=document.getElementById("placa").value.toUpperCase();
-    const modelo=document.getElementById("modelo").value;
-    const ano=document.getElementById("ano").value;
-    const km=document.getElementById("km").value;
-    const mensagem=`🔧 *Elite Garage*\n\n👤 Cliente: ${cliente}\n🚗 Veículo: ${modelo}\n📅 Ano: ${ano}\n🛣 KM: ${km}\n🔑 Placa: ${placa}\n\nStatus Técnico: ${criticos>0?"CRÍTICO":"OK"}\n\n📍 São Caetano do Sul - SP\n📲 WhatsApp: https://wa.me/5511948004627\n📸 Instagram: https://instagram.com/elitegarage`;
-    window.open("https://wa.me/?text="+encodeURIComponent(mensagem));
-}
-
-// ======================
-// Placa Mercosul
-// ======================
-document.getElementById("placa").addEventListener("input",function(){
-    const regex=/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/;
-    this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'').substring(0,7);
-    if(this.value.length===7 && !regex.test(this.value)){this.style.border="2px solid #ff4d4d";}
-    else{this.style.border="none";consultarAPI(this.value);}
-});
-
-// ======================
-// API BrasilAPI
-// ======================
-async function consultarAPI(placa){
-    if(placa.length!==7)return;
-    try{
-        const res=await fetch(`https://brasilapi.com.br/api/veiculos/v1/${placa}`);
-        if(res.ok){
-            const data=await res.json();
-            document.getElementById("marca").value=data.brand||'';
-            document.getElementById("modelo").value=data.model||'';
-            document.getElementById("ano").value=data.year||'';
-            document.getElementById("combustivel").value=data.fuel||'';
-            document.getElementById("motorizacao").value=data.engine||'';
+    // --- Gerar checklist 3 itens por categoria ---
+    categorias.forEach(cat=>{
+        const categoryDiv=document.createElement('div');
+        categoryDiv.className='category';
+        categoryDiv.id=cat.replace(/\s+/g,'').toLowerCase();
+        let innerHTML=`<h4>${cat}</h4>`;
+        for(let i=1;i<=3;i++){
+            innerHTML+=`
+            <div class="check-item" data-status="ok">
+                <span>${cat} - Item ${i}</span>
+                <div class="check-buttons">
+                    <button onclick="setStatus(this,'ok')">OK</button>
+                    <button onclick="setStatus(this,'alerta')">ALERTA</button>
+                    <button onclick="setStatus(this,'critico')">CRÍTICO</button>
+                    <input type="file" onchange="uploadPhoto(this)" style="display:none;" accept="image/*">
+                    <button onclick="this.previousElementSibling.click()">📸</button>
+                </div>
+                <textarea class="comment" placeholder="Comentário"></textarea>
+            </div>`;
         }
-    }catch(e){console.log('Erro API',e);}
-}
+        categoryDiv.innerHTML=innerHTML;
+        checklistDiv.appendChild(categoryDiv);
+    });
 
-// ======================
-// Service Worker PWA
-// ======================
-if('serviceWorker' in navigator){
-    window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js',{scope:'./'}).then(()=>console.log("SW registrado com sucesso")).catch(err=>console.log("Erro SW:",err));});
-}
+    atualizarStatus();
 
-// ======================
-// Histórico LocalStorage
-// ======================
-window.addEventListener('beforeunload',()=>{
-    const data={
-        cliente:document.getElementById("cliente").value,
-        placa:document.getElementById("placa").value,
-        modelo:document.getElementById("modelo").value,
-        ano:document.getElementById("ano").value,
-        km:document.getElementById("km").value,
-        ultimaRevisao:document.getElementById("ultimaRevisao").value,
-        checklist:Array.from(document.querySelectorAll('.check-item')).map(item=>({
-            status:item.dataset.status||'ok',
-            comentario:item.querySelector('textarea.comment').value
-        }))
-    };
-    localStorage.setItem('elitegarageData',JSON.stringify(data));
-});
+    // --- Funções globais ---
+    window.setStatus=function(btn,status){
+        const item=btn.closest('.check-item');
+        const category=btn.closest('.category');
+        item.dataset.status=status;
+        if(category.querySelectorAll('.check-item[data-status="critico"]').length>0){
+            category.classList.add('critico');
+        } else { category.classList.remove('critico'); }
+        atualizarStatus();
+    }
 
-window.addEventListener('load',()=>{
+    window.atualizarStatus=function(){
+        const statusBox=document.getElementById("statusBox");
+        const contador=document.getElementById("contadorCriticos");
+        criticos=document.querySelectorAll('.check-item[data-status="critico"]').length;
+        contador.innerText=criticos;
+
+        if(criticos>0){statusBox.className="statusBox critico";statusBox.innerText="🔴 Risco Crítico";}
+        else{
+            const alertas=document.querySelectorAll('.check-item[data-status="alerta"]').length;
+            if(alertas>0){statusBox.className="statusBox alerta";statusBox.innerText="🟡 Atenção";}
+            else{statusBox.className="statusBox ok";statusBox.innerText="🟢 Aprovado";}
+        }
+
+        verificarAlertasInteligentes();
+        atualizarPainelAdmin();
+    }
+
+    window.uploadPhoto=function(input){
+        const file=input.files[0];
+        if(file){
+            const reader=new FileReader();
+            reader.onload=function(e){console.log('Foto carregada:',e.target.result);}
+            reader.readAsDataURL(file);
+        }
+    }
+
+    window.enviarWhatsApp=function(){
+        const cliente=document.getElementById("cliente").value;
+        const placa=document.getElementById("placa").value.toUpperCase();
+        const modelo=document.getElementById("modelo").value;
+        const ano=document.getElementById("ano").value;
+        const km=document.getElementById("km").value;
+        const mensagem=`🔧 *Elite Garage*\n\n👤 Cliente: ${cliente}\n🚗 Veículo: ${modelo}\n📅 Ano: ${ano}\n🛣 KM: ${km}\n🔑 Placa: ${placa}\n\nStatus Técnico: ${criticos>0?"CRÍTICO":"OK"}\n\n📍 São Caetano do Sul - SP\n📲 WhatsApp: https://wa.me/5511948004627\n📸 Instagram: https://instagram.com/elitegarage`;
+        window.open("https://wa.me/?text="+encodeURIComponent(mensagem));
+    }
+
+    // --- Histórico LocalStorage ---
+    window.addEventListener('beforeunload',()=>{
+        const data={
+            cliente:document.getElementById("cliente").value,
+            placa:document.getElementById("placa").value,
+            modelo:document.getElementById("modelo").value,
+            ano:document.getElementById("ano").value,
+            km:document.getElementById("km").value,
+            ultimaRevisao:document.getElementById("ultimaRevisao").value,
+            checklist:Array.from(document.querySelectorAll('.check-item')).map(item=>({
+                status:item.dataset.status||'ok',
+                comentario:item.querySelector('textarea.comment').value
+            }))
+        };
+        localStorage.setItem('elitegarageData',JSON.stringify(data));
+    });
+
     const data=JSON.parse(localStorage.getItem('elitegarageData'));
     if(data){
         document.getElementById("cliente").value=data.cliente||'';
@@ -259,33 +229,73 @@ window.addEventListener('load',()=>{
         });
         atualizarStatus();
     }
+
+    // --- Painel Administrativo e Risco ---
+    window.atualizarPainelAdmin=function(){
+        const labels=categorias;
+        const criticosPorCategoria=labels.map(cat=>document.querySelectorAll(`#${cat.replace(/\s+/g,'').toLowerCase()} .check-item[data-status="critico"]`).length);
+
+        const ctx=document.getElementById('paretoChart').getContext('2d');
+        if(window.paretoChart) window.paretoChart.destroy();
+        window.paretoChart=new Chart(ctx,{
+            type:'bar',
+            data:{labels:labels,datasets:[{label:'Itens Críticos',data:criticosPorCategoria,backgroundColor:'#ff4d4d'}]},
+            options:{responsive:true,plugins:{title:{display:true,text:'Pareto de Itens Críticos por Categoria'}}}
+        });
+
+        const ctx2=document.getElementById('temposManutencaoChart').getContext('2d');
+        if(window.temposChart) window.temposChart.destroy();
+        window.temposChart=new Chart(ctx2,{
+            type:'line',
+            data:{labels:['Semanal','Mensal','Anual'],datasets:[{label:'Prioridade Manutenção',data:criticosPorCategoria.map(x=>x*5),borderColor:'#d4af37',backgroundColor:'rgba(212,175,55,0.3)',fill:true}]},
+            options:{responsive:true,plugins:{title:{display:true,text:'Prioridade de Manutenção'}}}
+        });
+
+        // Indicadores de risco por cliente
+        const riskDiv=document.getElementById('riskList');
+        riskDiv.innerHTML='';
+        const cliente=document.getElementById("cliente").value || 'Cliente Atual';
+        const score=Array.from(document.querySelectorAll('.check-item')).reduce((acc,item)=>{
+            if(item.dataset.status==='ok') acc+=2;
+            else if(item.dataset.status==='alerta') acc+=1;
+            else if(item.dataset.status==='critico') acc-=1;
+            return acc;
+        },0);
+        let classe='riskBaixo',texto='Baixo 🟢';
+        if(score<=0){classe='riskCritico'; texto='Crítico 🔴';}
+        else if(score<=3){classe='riskAlto'; texto='Alto 🔴';}
+        else if(score<=6){classe='riskMedio'; texto='Médio 🟡';}
+        riskDiv.innerHTML=`<div class="riskItem ${classe}">${cliente}: Score ${score} - Risco ${texto}</div>`;
+    }
+
+    // --- Alertas inteligentes ---
+    window.verificarAlertasInteligentes=function(){
+        const alertDiv=document.getElementById('alertInteligente');
+        alertDiv.innerHTML='';
+        const km=document.getElementById("km").value;
+        const ultimaRevisao=document.getElementById("ultimaRevisao").value;
+
+        let alerts=[];
+        // KM
+        if(km && km>15000) alerts.push({text:'KM acima de 15.000 desde última revisão',classe:'alertVermelho'});
+        else if(km && km>10000) alerts.push({text:'KM acima de 10.000 desde última revisão',classe:'alertAmarelo'});
+
+        // Data
+        if(ultimaRevisao){
+            const lastDate=new Date(ultimaRevisao);
+            const diffM=(new Date()-lastDate)/1000/60/60/24/30; // meses aproximados
+            if(diffM>12) alerts.push({text:'Última revisão > 12 meses',classe:'alertVermelho'});
+            else if(diffM>6) alerts.push({text:'Última revisão > 6 meses',classe:'alertAmarelo'});
+        }
+
+        alerts.forEach(a=>{
+            const div=document.createElement('div');
+            div.className=`alertInteligente ${a.classe}`;
+            div.innerText=a.text;
+            alertDiv.appendChild(div);
+        });
+    }
 });
-
-// ======================
-// Painel Administrativo
-// ======================
-function atualizarPainelAdmin(){
-    let labels=categorias;
-    let criticosPorCategoria=labels.map(cat=>document.querySelectorAll(`#${cat.replace(/\s+/g,'').toLowerCase()} .check-item[data-status="critico"]`).length);
-
-    // Pareto Chart
-    const ctx=document.getElementById('paretoChart').getContext('2d');
-    if(window.paretoChart) window.paretoChart.destroy();
-    window.paretoChart=new Chart(ctx,{
-        type:'bar',
-        data:{labels:labels,datasets:[{label:'Itens Críticos',data:criticosPorCategoria,backgroundColor:'#ff4d4d'}]},
-        options:{responsive:true,plugins:{title:{display:true,text:'Pareto de Itens Críticos por Categoria'}}}
-    });
-
-    // Prioridade Manutenção
-    const ctx2=document.getElementById('temposManutencaoChart').getContext('2d');
-    if(window.temposChart) window.temposChart.destroy();
-    window.temposChart=new Chart(ctx2,{
-        type:'line',
-        data:{labels:['Semanal','Mensal','Anual'],datasets:[{label:'Prioridade Manutenção',data:criticosPorCategoria.map(x=>x*5),borderColor:'#d4af37',backgroundColor:'rgba(212,175,55,0.3)',fill:true}]},
-        options:{responsive:true,plugins:{title:{display:true,text:'Prioridade de Manutenção'}}}
-    });
-}
 </script>
 
 </body>
