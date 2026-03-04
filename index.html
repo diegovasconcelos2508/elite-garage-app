@@ -111,15 +111,17 @@ let criticos=0;
 let categorias=["Sistema de Frenagem","Suspensão e Direção","Pneus e Rodas","Motor","Transmissão","Sistema Elétrico","Checkup Geral"];
 const checklistDiv=document.getElementById("checklist");
 
-// Gerar checklist
+// Gerar checklist com 3 itens por categoria
 categorias.forEach(cat=>{
     const categoryDiv=document.createElement('div');
     categoryDiv.className='category';
     categoryDiv.id=cat.replace(/\s+/g,'').toLowerCase();
+
     let innerHTML=`<h4>${cat}</h4>`;
     for(let i=1;i<=3;i++){
-        innerHTML+=`<div class="check-item">
-            <span>Item ${i}</span>
+        innerHTML+=`
+        <div class="check-item" data-status="ok">
+            <span>${cat} - Item ${i}</span>
             <div class="check-buttons">
                 <button onclick="setStatus(this,'ok')">OK</button>
                 <button onclick="setStatus(this,'alerta')">ALERTA</button>
@@ -263,9 +265,9 @@ window.addEventListener('load',()=>{
 // Painel Administrativo
 // ======================
 function atualizarPainelAdmin(){
-    // Gerar dados simulados para exemplo
     let labels=categorias;
     let criticosPorCategoria=labels.map(cat=>document.querySelectorAll(`#${cat.replace(/\s+/g,'').toLowerCase()} .check-item[data-status="critico"]`).length);
+
     // Pareto Chart
     const ctx=document.getElementById('paretoChart').getContext('2d');
     if(window.paretoChart) window.paretoChart.destroy();
@@ -274,13 +276,14 @@ function atualizarPainelAdmin(){
         data:{labels:labels,datasets:[{label:'Itens Críticos',data:criticosPorCategoria,backgroundColor:'#ff4d4d'}]},
         options:{responsive:true,plugins:{title:{display:true,text:'Pareto de Itens Críticos por Categoria'}}}
     });
-    // Tempo manutenção chart exemplo
+
+    // Prioridade Manutenção
     const ctx2=document.getElementById('temposManutencaoChart').getContext('2d');
     if(window.temposChart) window.temposChart.destroy();
     window.temposChart=new Chart(ctx2,{
         type:'line',
         data:{labels:['Semanal','Mensal','Anual'],datasets:[{label:'Prioridade Manutenção',data:criticosPorCategoria.map(x=>x*5),borderColor:'#d4af37',backgroundColor:'rgba(212,175,55,0.3)',fill:true}]},
-        options:{responsive:true,plugins:{title:{display:true,text:'Prioridade de Manutenção baseada em Criticidade'}}}
+        options:{responsive:true,plugins:{title:{display:true,text:'Prioridade de Manutenção'}}}
     });
 }
 </script>
