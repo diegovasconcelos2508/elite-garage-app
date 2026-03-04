@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0d0d0d">
+<meta name="description" content="Sistema Inteligente de Checklist Automotivo - Elite Garage">
+<meta name="robots" content="index, follow">
+
+<title>Elite Garage - Sistema Inteligente</title>
+
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="https://cdn-icons-png.flaticon.com/512/743/743007.png">
+
+<!-- Pré-carregamento para performance -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+
+<style>
+/* MANTENHA TODO SEU CSS ORIGINAL AQUI */
+/* Não remova nada do sistema */
+</style>
+</head>
+
+<body>
+
+<!-- 🔽 COLE AQUI TODO SEU SISTEMA ATUAL COMPLETO 🔽 -->
+
+<!-- NÃO REMOVER NENHUMA FUNÇÃO EXISTENTE -->
+
+<script>
+
+/* ========================= */
+/* REGISTRO SERVICE WORKER */
+/* ========================= */
+
+if ('serviceWorker' in navigator) {
+window.addEventListener('load', () => {
+navigator.serviceWorker.register('./sw.js')
+.then(reg => console.log('SW registrado com sucesso'))
+.catch(err => console.log('Erro SW:', err));
+});
+}
+
+/* TODAS SUAS FUNÇÕES EXISTENTES PERMANECEM ABAIXO */
+
+</script>
+
+</body>
+</html>
